@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BRUT | Edit PDF</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+    <script src="../jslib/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/downloadjs@1.4.7/download.min.js"></script>
+    <script src="../jslib/pdf.min.js"></script>
+    <script src="../jslib/storage.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '../jslib/pdf.worker.min.js';
+    </script>
+
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --card-bg: #f4f4f4;
+            --accent-color: #3b82f6;
+            --border-color: #000000;
+            --shadow-offset: 4px;
+            --transition-speed: 0.2s;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #121212;
+                --text-color: #ffffff;
+                --card-bg: #1e1e1e;
+                --border-color: #ffffff;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem 5%;
+            border-bottom: 2px solid var(--border-color);
+            position: relative;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -2px;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            color: inherit;
+            transition: var(--transition-speed);
+            font-weight: bold;
+        }
+
+        .nav-btn:hover {
+            background: var(--card-bg);
+            transform: scale(1.05);
+        }
+
+        main {
+            padding: 2rem 5%;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* --- EDITOR UI --- */
+        .toolbar {
+            position: sticky;
+            top: 20px;
+            z-index: 500;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            padding: 10px;
+            display: flex;
+            gap: 15px;
+            box-shadow: 4px 4px 0 var(--border-color);
+            margin-bottom: 20px;
+            border-radius: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tool-btn {
+            background: var(--bg-color);
+            border: 2px solid var(--border-color);
+            padding: 8px 15px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: 0.2s;
+        }
+
+        .tool-btn:hover,
+        .tool-btn.active {
+            background: var(--accent-color);
+            color: white;
+            box-shadow: 2px 2px 0 var(--text-color);
+        }
+
+        .workspace {
+            width: 100%;
+            max-width: 1000px;
+            background: #555;
+            padding: 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+            min-height: 500px;
+        }
+
+        .pdf-page-container {
+            position: relative;
+            background: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .pdf-canvas {
+            display: block;
+        }
+
+        .text-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            line-height: 1.0;
+            opacity: 0.2;
+            /* Hidden but selectable */
+        }
+
+        .text-layer>span {
+            color: transparent;
+            position: absolute;
+            white-space: pre;
+            cursor: text;
+            transform-origin: 0% 0%;
+        }
+
+        /* Highlight selectable text to hint user */
+        .text-layer:hover {
+            opacity: 0.8;
+            outline: 2px dashed rgba(0, 0, 0, 0.1);
+        }
+
+        /* Rendered Elements Overlay (Our Edits) */
+        .edit-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            /* Let clicks pass through to Text Layer unless hitting an element */
+        }
+
+        .edit-element {
+            position: absolute;
+            pointer-events: all;
+            border: 1px dashed var(--accent-color);
+            background: white;
+        }
+
+        .edit-input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: inherit;
+            color: black;
+            resize: none;
+            padding: 0;
+            margin: 0;
+            outline: none;
+            overflow: hidden;
+        }
+
+        .drop-area {
+            border: 3px dashed var(--border-color);
+            padding: 3rem 1rem;
+            text-align: center;
+            margin: 1.5rem 0;
+            cursor: pointer;
+            background: var(--bg-color);
+            transition: 0.2s;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .drop-area:hover {
+            border-color: var(--accent-color);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .action-btn {
+            background: var(--accent-color);
+            color: white;
+            font-weight: 700;
+            border: 2px solid var(--text-color);
+            cursor: pointer;
+            padding: 10px 20px;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--text-color);
+            transition: var(--transition-speed);
+        }
+
+        .action-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 var(--text-color);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 4rem;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .spinner {
+            display: none;
+            width: 30px;
+            height: 30px;
+            border: 4px solid #ccc;
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Success Modal */
+        .success-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .success-content {
+            background: var(--card-bg);
+            border: 4px solid var(--border-color);
+            box-shadow: 8px 8px 0 var(--border-color);
+            text-align: center;
+            padding: 2rem;
+            width: 300px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-left">
+            <a href="../pdf/index.html" class="nav-btn" title="Back to PDF Tools">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </a>
+            <div class="logo" style="margin-left: 15px;">BRUT</div>
+        </div>
+    </header>
+
+    <main>
+        <div style="text-align:center; margin-bottom:10px;">
+            <span class="material-symbols-outlined"
+                style="font-size:48px; color:var(--accent-color);">edit_document</span>
+            <h1 style="margin:5px 0; text-transform: uppercase;">Edit PDF</h1>
+            <p style="opacity: 0.7;">Select text to replace it.</p>
+        </div>
+
+        <div class="drop-area" id="dropArea">
+            <span class="material-symbols-outlined" style="font-size:40px;">upload_file</span>
+            <p>Tap to Upload PDF</p>
+            <input type="file" id="fileInput" accept="application/pdf" style="display:none;">
+        </div>
+        <div class="spinner" id="spinner"></div>
+        <div id="status" style="font-weight:bold; margin-bottom:10px;"></div>
+
+        <div id="editorUI" style="display:none; width:100%; flex-direction:column; align-items:center;">
+            <div class="toolbar">
+                <button class="tool-btn active" id="toolSelect" onclick="setTool('select')">
+                    <span class="material-symbols-outlined">text_select_move</span> Select Text
+                </button>
+                <!-- Future: Draw, Image tools -->
+                <button class="action-btn" onclick="savePDF()">SAVE PDF</button>
+            </div>
+
+            <div class="workspace" id="workspace">
+                <!-- Pages go here -->
+            </div>
+        </div>
+
+        <div id="successModal" class="success-modal">
+            <div class="success-content">
+                <span class="material-symbols-outlined" style="font-size:60px; color:#10b981;">check_circle</span>
+                <h3>Success!</h3>
+                <p>File processed successfully.</p>
+                <button class="action-btn" onclick="location.reload()">OK</button>
+            </div>
+        </div>
+
+    </main>
+
+    <footer>
+        &copy; 2025 BRUT System. All rights reserved.
+    </footer>
+
+    <script>
+        const els = {
+            drop: document.getElementById('dropArea'),
+            input: document.getElementById('fileInput'),
+            spinner: document.getElementById('spinner'),
+            status: document.getElementById('status'),
+            editor: document.getElementById('editorUI'),
+            workspace: document.getElementById('workspace')
+        };
+
+        let globalFile = null;
+        let pdfDoc = null; // pdfjs doc
+        let currentTool = 'select';
+        let edits = []; // Stores { pageIndex, x, y, width, height, text, fontSize, fontFamily }
+
+        els.drop.onclick = () => els.input.click();
+        els.input.onchange = e => handleFile(e.target.files[0]);
+        els.drop.ondragover = e => {
+            e.preventDefault();
+            els.drop.style.borderColor = 'var(--accent-color)';
+        };
+        els.drop.ondragleave = () => els.drop.style.borderColor = 'var(--border-color)';
+        els.drop.ondrop = e => {
+            e.preventDefault();
+            handleFile(e.dataTransfer.files[0]);
+        };
+
+        function setTool(t) {
+            currentTool = t;
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('toolSelect').classList.add('active');
+        }
+
+        async function handleFile(file) {
+            if (!file || file.type !== 'application/pdf') return alert("Not a PDF");
+
+            els.spinner.style.display = 'block';
+            els.status.innerText = "Loading PDF...";
+            els.drop.style.display = 'none';
+
+            try {
+                // Save to IndexedDB if large
+                globalFile = await window.localFileStorage.saveFile(file);
+                const buf = await window.localFileStorage.getFile(globalFile);
+
+                // Render PDF
+                const loadingTask = pdfjsLib.getDocument({
+                    data: new Uint8Array(buf)
+                });
+                pdfDoc = await loadingTask.promise;
+
+                await renderPages();
+                els.editor.style.display = 'flex';
+                els.status.innerText = "";
+            } catch (e) {
+                console.error(e);
+                alert("Error loading PDF: " + e.message);
+                els.drop.style.display = 'block';
+            }
+            els.spinner.style.display = 'none';
+        }
+
+        async function renderPages() {
+            els.workspace.innerHTML = '';
+
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+                const page = await pdfDoc.getPage(i);
+                const scale = 1.0; // Fixed scale for now 
+                const viewport = page.getViewport({
+                    scale
+                });
+
+                // Container
+                const container = document.createElement('div');
+                container.className = 'pdf-page-container';
+                container.style.width = Math.floor(viewport.width) + 'px';
+                container.style.height = Math.floor(viewport.height) + 'px';
+                container.dataset.pageNumber = i;
+
+                // Canvas
+                const canvas = document.createElement('canvas');
+                canvas.className = 'pdf-canvas';
+                canvas.width = Math.floor(viewport.width);
+                canvas.height = Math.floor(viewport.height);
+                const ctx = canvas.getContext('2d');
+                container.appendChild(canvas);
+
+                // Text Layer
+                const textLayerDiv = document.createElement('div');
+                textLayerDiv.className = 'text-layer';
+                container.appendChild(textLayerDiv);
+
+                // Edit Layer
+                const editLayer = document.createElement('div');
+                editLayer.className = 'edit-layer';
+                container.appendChild(editLayer);
+
+                els.workspace.appendChild(container);
+
+                // Render Canvas
+                await page.render({
+                    canvasContext: ctx,
+                    viewport
+                }).promise;
+
+                // Render Text Layer
+                const textContent = await page.getTextContent();
+                pdfjsLib.renderTextLayer({
+                    textContentSource: textContent,
+                    container: textLayerDiv,
+                    viewport: viewport,
+                    textDivs: []
+                });
+            }
+        }
+
+        // Logic for Selecting Text and Replacing
+        document.addEventListener('mouseup', () => {
+            if (currentTool !== 'select') return;
+
+            const sel = window.getSelection();
+            if (sel.rangeCount === 0 || sel.isCollapsed) return;
+
+            const range = sel.getRangeAt(0);
+            const container = range.commonAncestorContainer.parentElement.closest('.pdf-page-container');
+
+            if (!container) return; // Selected outside a page
+
+            // Get bounds relative to viewport
+            const rects = range.getClientRects();
+            if (rects.length === 0) return;
+
+            // We only handle simple single-line replacements for MVP
+            // Or we calculate the bounding box of all rects
+            let minX = Infinity,
+                minY = Infinity,
+                maxX = -Infinity,
+                maxY = -Infinity;
+
+            for (let i = 0; i < rects.length; i++) {
+                minX = Math.min(minX, rects[i].left);
+                minY = Math.min(minY, rects[i].top);
+                maxX = Math.max(maxX, rects[i].right);
+                maxY = Math.max(maxY, rects[i].bottom);
+            }
+
+            // Convert to Page Coords
+            const pageRect = container.getBoundingClientRect();
+            const x = minX - pageRect.left;
+            const y = minY - pageRect.top;
+            const w = maxX - minX;
+            const h = maxY - minY;
+
+            // Create Replacement Input
+            createReplacement(container, x, y, w, h, sel.toString());
+
+            // Clear native selection so it doesn't look messy
+            sel.removeAllRanges();
+        });
+
+        function createReplacement(container, x, y, width, height, initialText) {
+            const pageNum = parseInt(container.dataset.pageNumber);
+
+            const el = document.createElement('div');
+            el.className = 'edit-element';
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            el.style.width = width + 'px';
+            el.style.height = height + 'px';
+
+            // Create Input
+            const input = document.createElement('input'); // or textarea
+            input.className = 'edit-input';
+            input.value = initialText.trim(); // User can probably retype
+            // Rough font size estimation (can be improved)
+            input.style.fontSize = (height * 0.7) + 'px';
+
+            // Delete button for this edit
+            const delBtn = document.createElement('div');
+            delBtn.innerHTML = '×';
+            delBtn.style.position = 'absolute';
+            delBtn.style.top = '-15px';
+            delBtn.style.right = '-15px';
+            delBtn.style.background = 'red';
+            delBtn.style.color = 'white';
+            delBtn.style.width = '15px';
+            delBtn.style.height = '15px';
+            delBtn.style.fontSize = '12px';
+            delBtn.style.borderRadius = '50%';
+            delBtn.style.cursor = 'pointer';
+            delBtn.style.display = 'flex';
+            delBtn.style.justifyContent = 'center';
+            delBtn.style.alignItems = 'center';
+            delBtn.onclick = (e) => {
+                e.stopPropagation();
+                el.remove();
+            };
+
+            el.appendChild(input);
+            el.appendChild(delBtn);
+
+            container.querySelector('.edit-layer').appendChild(el);
+            input.focus();
+            input.select();
+        }
+
+        async function savePDF() {
+            els.spinner.style.display = 'block';
+            els.status.innerText = "Generating PDF...";
+
+            try {
+                const {
+                    PDFDocument,
+                    rgb,
+                    StandardFonts
+                } = PDFLib;
+                const buf = await window.localFileStorage.getFile(globalFile);
+                const pdf = await PDFDocument.load(buf);
+                const helvetica = await pdf.embedFont(StandardFonts.Helvetica);
+
+                // Iterate over DOM to find edits
+                const pages = document.querySelectorAll('.pdf-page-container');
+
+                for (let i = 0; i < pages.length; i++) {
+                    const pageDiv = pages[i];
+                    const pageNum = i; // 0-indexed for pdf-lib
+                    const pdfPage = pdf.getPage(pageNum);
+                    const {
+                        height: pdfHeight
+                    } = pdfPage.getSize(); // PDF coords are y-flipped
+
+                    // Find all edits in this page
+                    const edits = pageDiv.querySelectorAll('.edit-element');
+
+                    for (let edit of edits) {
+                        const input = edit.querySelector('input');
+                        if (!input) continue;
+
+                        const rect = edit.getBoundingClientRect();
+                        const pageRect = pageDiv.getBoundingClientRect();
+
+                        // Calculate relative coords
+                        const x = rect.left - pageRect.left;
+                        const y = rect.top - pageRect.top;
+                        const w = rect.width;
+                        const h = rect.height;
+
+                        const text = input.value;
+
+                        // 1. Draw White Rectangle (Mask)
+                        // In pdf-lib y starts at bottom
+                        const pdfY = pdfHeight - y - h;
+
+                        pdfPage.drawRectangle({
+                            x: x,
+                            y: pdfY,
+                            width: w,
+                            height: h,
+                            color: rgb(1, 1, 1), // White
+                        });
+
+                        // 2. Draw Text
+                        // Estimation of font size based on box height
+                        const fontSize = h * 0.75;
+
+                        pdfPage.drawText(text, {
+                            x: x,
+                            y: pdfY + (h * 0.2), // Slight baseline adjustment
+                            size: fontSize,
+                            font: helvetica,
+                            color: rgb(0, 0, 0),
+                        });
+                    }
+                }
+
+                const outBuf = await pdf.save();
+                download(outBuf, "edited.pdf", "application/pdf");
+                document.getElementById('successModal').style.display = 'flex';
+
+            } catch (e) {
+                console.error(e);
+                alert("Error saving: " + e.message);
+            }
+            els.spinner.style.display = 'none';
+        }
+    </script>
+
+</body>
+
+</html>

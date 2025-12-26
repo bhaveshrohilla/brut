@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BRUT | Protect PDF</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+    <script src="../jslib/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/downloadjs@1.4.7/download.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/coherentpdf@latest/dist/coherentpdf.browser.min.js"></script>
+    <script src="../jslib/storage.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --card-bg: #f4f4f4;
+            --accent-color: #3b82f6;
+            --border-color: #000000;
+            --shadow-offset: 4px;
+            --transition-speed: 0.2s;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #121212;
+                --text-color: #ffffff;
+                --card-bg: #1e1e1e;
+                --border-color: #ffffff;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem 5%;
+            border-bottom: 2px solid var(--border-color);
+            position: relative;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -2px;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            color: inherit;
+            transition: var(--transition-speed);
+            font-weight: bold;
+        }
+
+        .nav-btn:hover {
+            background: var(--card-bg);
+            transform: scale(1.05);
+        }
+
+        main {
+            padding: 4rem 5%;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .drop-area {
+            border: 3px dashed var(--border-color);
+            padding: 3rem 1rem;
+            text-align: center;
+            margin: 1.5rem 0;
+            cursor: pointer;
+            background: var(--bg-color);
+            transition: 0.2s;
+            width: 100%;
+        }
+
+        .drop-area:hover {
+            border-color: var(--accent-color);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .input-group {
+            width: 100%;
+            margin-bottom: 20px;
+            display: none;
+            /* Hidden until file upload */
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .styled-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .styled-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .action-btn {
+            background: var(--accent-color);
+            color: white;
+            font-weight: 700;
+            border: 2px solid var(--text-color);
+            cursor: pointer;
+            padding: 15px 30px;
+            width: 100%;
+            font-size: 1.1rem;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--text-color);
+            transition: var(--transition-speed);
+            display: none;
+        }
+
+        .action-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 var(--text-color);
+        }
+
+        .action-btn:disabled {
+            background: gray;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 4rem;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .spinner {
+            display: none;
+            width: 30px;
+            height: 30px;
+            border: 4px solid #ccc;
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Success Modal */
+        .success-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .success-content {
+            background: var(--card-bg);
+            border: 4px solid var(--border-color);
+            box-shadow: 8px 8px 0 var(--border-color);
+            text-align: center;
+            padding: 2rem;
+            width: 300px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-left">
+            <a href="../pdf/index.html" class="nav-btn" title="Back to PDF Tools">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </a>
+            <div class="logo" style="margin-left: 15px;">BRUT</div>
+        </div>
+    </header>
+
+    <main>
+        <div style="text-align:center; margin-bottom:10px;">
+            <span class="material-symbols-outlined" style="font-size:48px; color:var(--accent-color);">lock</span>
+            <h1 style="margin:5px 0; text-transform: uppercase;">Protect PDF</h1>
+            <p style="opacity: 0.7;">Encrypt your PDF with a password.</p>
+        </div>
+
+        <div class="drop-area" id="dropArea">
+            <span class="material-symbols-outlined" style="font-size:40px;">upload_file</span>
+            <p>Tap to Upload PDF</p>
+            <input type="file" id="fileInput" accept="application/pdf" style="display:none;">
+        </div>
+
+        <div id="status" style="font-weight:bold; margin-bottom:10px; min-height: 20px;"></div>
+
+        <div id="passwordSection" class="input-group">
+            <label class="input-label">Set Password</label>
+            <input type="password" id="pass1" class="styled-input" placeholder="Enter password...">
+            <br><br>
+            <label class="input-label">Confirm Password</label>
+            <input type="password" id="pass2" class="styled-input" placeholder="Repeat password...">
+        </div>
+
+        <button id="actionBtn" class="action-btn">PROTECT PDF</button>
+        <div class="spinner" id="spinner"></div>
+
+        <div id="successModal" class="success-modal">
+            <div class="success-content">
+                <span class="material-symbols-outlined" style="font-size:60px; color:#10b981;">check_circle</span>
+                <h3>Success!</h3>
+                <p>File encrypted downloaded.</p>
+                <button class="action-btn" style="display:inline-block; margin-top:10px;"
+                    onclick="location.reload()">OK</button>
+            </div>
+        </div>
+
+    </main>
+
+    <footer>
+        &copy; 2025 BRUT System. All rights reserved.
+    </footer>
+
+    <script>
+        const els = {
+            drop: document.getElementById('dropArea'),
+            input: document.getElementById('fileInput'),
+            spinner: document.getElementById('spinner'),
+            status: document.getElementById('status'),
+            passSection: document.getElementById('passwordSection'),
+            btn: document.getElementById('actionBtn'),
+            p1: document.getElementById('pass1'),
+            p2: document.getElementById('pass2'),
+            successModal: document.getElementById('successModal')
+        };
+
+        let globalFile = null;
+
+        els.drop.onclick = () => els.input.click();
+        els.input.onchange = e => handleFile(e.target.files[0]);
+        els.drop.ondragover = e => {
+            e.preventDefault();
+            els.drop.style.borderColor = 'var(--accent-color)';
+        };
+        els.drop.ondragleave = () => els.drop.style.borderColor = 'var(--border-color)';
+        els.drop.ondrop = e => {
+            e.preventDefault();
+            handleFile(e.dataTransfer.files[0]);
+        };
+
+        async function handleFile(file) {
+            if (!file || file.type !== 'application/pdf') return alert("Not a PDF");
+
+            els.spinner.style.display = 'block';
+            els.status.innerText = "Processing...";
+
+            try {
+                globalFile = await window.localFileStorage.saveFile(file);
+
+                els.status.innerText = `Selected: ${file.name}`;
+                els.drop.style.display = 'none';
+                els.passSection.style.display = 'block';
+                els.btn.style.display = 'block';
+
+            } catch (e) {
+                console.error(e);
+                els.status.innerText = "Error: " + e.message;
+            }
+            els.spinner.style.display = 'none';
+        }
+
+        els.btn.onclick = async () => {
+            const p1 = els.p1.value;
+            const p2 = els.p2.value;
+
+            if (!p1) return alert("Please enter a password.");
+            if (p1 !== p2) return alert("Passwords do not match.");
+
+            els.spinner.style.display = 'block';
+            els.btn.disabled = true;
+            els.status.innerText = "Encrypting...";
+
+            try {
+                const {
+                    PDFDocument
+                } = PDFLib;
+                const buf = await window.localFileStorage.getFile(globalFile);
+                const pdfDoc = await PDFDocument.load(buf);
+
+                pdfDoc.encrypt({
+                    userPassword: p1,
+                    ownerPassword: p1, // Typically same for personal protection
+                    permissions: {
+                        printing: 'highResolution',
+                        modifying: false,
+                        copying: false,
+                        annotating: false,
+                        fillingForms: false,
+                        contentAccessibility: false,
+                        documentAssembly: false,
+                    },
+                });
+
+                const outBuf = await pdfDoc.save();
+                download(outBuf, "protected.pdf", "application/pdf");
+                els.successModal.style.display = 'flex';
+
+            } catch (e) {
+                console.error(e);
+                alert("Error during encryption: " + e.message);
+                els.status.innerText = "Failed.";
+            }
+
+            els.spinner.style.display = 'none';
+            els.btn.disabled = false;
+        };
+    </script>
+
+</body>
+
+</html>
