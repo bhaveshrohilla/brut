@@ -1,0 +1,400 @@
+<?php
+session_start();
+$logged_in = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
+$fullname = $_SESSION['user_name'] ?? '';
+$user_initial = $logged_in ? strtoupper(substr($fullname, 0, 1)) : '';
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRUT | Privacy & Terms</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+    <style>
+        /* --- CSS CONSTANTS --- */
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --card-bg: #f4f4f4;
+            --accent-color: #3b82f6;
+            --border-color: #000000;
+            --shadow-offset: 4px;
+            --transition-speed: 0.1s;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #121212;
+                --text-color: #ffffff;
+                --card-bg: #1e1e1e;
+                --border-color: #ffffff;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- HEADER --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem 5%;
+            border-bottom: 2px solid var(--border-color);
+            position: relative;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -2px;
+            text-transform: uppercase;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            color: inherit;
+            transition: var(--transition-speed);
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .nav-btn:hover {
+            background: var(--card-bg);
+            transform: scale(1.05);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* --- AVATAR BUTTON --- */
+        .avatar-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--border-color);
+        }
+
+        /* --- CONTENT AREA --- */
+        .content {
+            flex: 1;
+            padding: 3rem 5%;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .page-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.7;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-color);
+            padding: 2.5rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--border-color);
+            animation: fadeIn 0.3s ease-out;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        h2 {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        h2:first-child {
+            margin-top: 0;
+        }
+
+        h3 {
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        h4 {
+            margin-top: 1.2rem;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        ul {
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-left">
+            <a href="javascript:history.back()" class="nav-btn" title="Back">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </a>
+            <div class="logo" style="margin-left: 15px;">BRUT</div>
+        </div>
+        <div class="header-right">
+            <?php if ($logged_in): ?>
+                <span><?php echo htmlspecialchars($fullname); ?></span>
+                <div class="avatar-btn"><?php echo $user_initial; ?></div>
+            <?php else: ?>
+                <!-- Optional: Login link if not logged in -->
+                <a href="auth.php" class="nav-btn" style="width: auto; padding: 0 1rem;">Login</a>
+            <?php endif; ?>
+        </div>
+    </header>
+
+    <main class="content">
+        <div class="page-title">Privacy & Terms</div>
+        <div class="page-subtitle">
+            A Product of <strong>Bhavesh Rohilla Projects</strong><br>
+            Last Updated: December 17, 2025
+        </div>
+
+        <div class="card">
+            <h2>Privacy Policy</h2>
+
+            <h3>1. Overview</h3>
+            <p>BRUT is a web-based document utility developed and maintained under <strong>Bhavesh Rohilla Projects</strong>. This Privacy Policy describes how user information is collected, used, and protected when accessing or using BRUT.</p>
+            <p>By using BRUT, you agree to the practices described in this Privacy Policy.</p>
+
+            <hr style="border:1px solid var(--border-color); margin: 2rem 0; opacity: 0.2;">
+
+            <h3>2. Information We Collect</h3>
+            <p>We collect only the information that is necessary to provide core functionality of the service.</p>
+
+            <h4>2.1 Account and Login Information</h4>
+            <p>The following data may be collected during account creation or login:</p>
+            <ul>
+                <li>Email address</li>
+                <li>Authentication identifiers required for secure login</li>
+            </ul>
+            <p>This information is used exclusively for:</p>
+            <ul>
+                <li>User authentication</li>
+                <li>Account management</li>
+                <li>Security and access control</li>
+            </ul>
+            <p>No additional personal data is collected beyond what is required for login and service operation.</p>
+
+            <hr style="border:1px solid var(--border-color); margin: 2rem 0; opacity: 0.2;">
+
+            <h3>3. File Processing and Storage</h3>
+            <p>BRUT is designed with a privacy-first architecture.</p>
+            <ul>
+                <li>Files processed using BRUT are <strong>not uploaded to or stored on BRUT servers</strong>.</li>
+                <li>All file operations are performed locally within the user’s browser or client-side environment.</li>
+            </ul>
+
+            <h4>3.1 Cloud Storage Integrations</h4>
+            <p>Files are uploaded only when the user explicitly connects and authorizes one of the following third-party services:</p>
+            <ul>
+                <li>Google Drive</li>
+                <li>Microsoft OneDrive</li>
+            </ul>
+            <p>In such cases:</p>
+            <ul>
+                <li>File transfers occur directly between the user and the connected cloud service</li>
+                <li>BRUT does not permanently store user files on its own servers</li>
+                <li>File access is limited strictly to the scope authorized by the user</li>
+            </ul>
+
+            <hr style="border:1px solid var(--border-color); margin: 2rem 0; opacity: 0.2;">
+
+            <h3>4. Use of Third-Party Services</h3>
+            <p>BRUT integrates with third-party platforms solely to enable optional features such as cloud file import and export.</p>
+            <p>These services operate under their own privacy policies and terms of service. Bhavesh Rohilla Projects does not control and is not responsible for the data handling practices of these third-party providers.</p>
+
+            <hr style="border:1px solid var(--border-color); margin: 2rem 0; opacity: 0.2;">
+
+            <h3>5. Data Security</h3>
+            <p>Reasonable administrative and technical safeguards are implemented to protect user account information against unauthorized access, alteration, or disclosure.</p>
+            <p>While no method of transmission or storage is completely secure, BRUT takes appropriate measures to minimize risk.</p>
+
+            <hr style="border:1px solid var(--border-color); margin: 2rem 0; opacity: 0.2;">
+
+            <h3>6. Data Usage Limitations</h3>
+            <p>Bhavesh Rohilla Projects does <strong>not</strong>:</p>
+            <ul>
+                <li>Sell or rent user data</li>
+                <li>Analyze, monitor, or index user files</li>
+                <li>Store processed documents on its servers</li>
+                <li>Use user data for advertising or profiling purposes</li>
+            </ul>
+            <p>User data is used solely to operate and improve the service.</p>
+        </div>
+
+        <div class="card">
+            <h2>Terms of Service</h2>
+
+            <h3>7. Acceptance of Terms</h3>
+            <p>By accessing or using BRUT, you agree to be bound by these Terms of Service. If you do not agree, you should discontinue use of the service.</p>
+
+            <hr style="border:1px solid var(--border-color); margin: 2rem 0; opacity: 0.2;">
+
+            <h3>8. Permitted Use</h3>
+            <p>Users agree to:</p>
+            <ul>
+                <li>Use BRUT only for lawful purposes</li>
+                <li>Refrain from attempting to disrupt, exploit, or reverse-engineer the service</li>
+            </ul>
+            <p>Users are solely responsible for the content of the files they process using BRUT.</p>
+
+            <hr style="border:1px solid var(--border-color); margin: 2rem 0; opacity: 0.2;">
+
+            <h3>9. Intellectual Property</h3>
+            <p>All software, design elements, branding, and intellectual property associated with BRUT are owned by <strong>Bhavesh Rohilla Projects</strong>.</p>
+            <p>Users retain full ownership of their files and data. BRUT does not claim ownership or rights over user-generated content.</p>
+
+            <hr style="border:1px solid var(--border-color); margin: 2rem 0; opacity: 0.2;">
+
+            <h3>10. Service Availability</h3>
+            <p>BRUT is provided on an “as is” and “as available” basis. Features may be modified, updated, or discontinued without prior notice.</p>
+            <p>Bhavesh Rohilla Projects does not guarantee uninterrupted or error-free operation.</p>
+
+            <hr style="border:1px solid var(--border-color); margin: 2rem 0; opacity: 0.2;">
+
+            <h3>11. Limitation of Liability</h3>
+            <p>To the maximum extent permitted by law, Bhavesh Rohilla Projects shall not be liable for:</p>
+            <ul>
+                <li>Data loss resulting from browser, device, or third-party service failures</li>
+                <li>Unauthorized access caused by factors beyond reasonable control</li>
+                <li>User errors or misuse of the service</li>
+            </ul>
+            <p>Users are encouraged to maintain backups of important files.</p>
+
+            <hr style="border:1px solid var(--border-color); margin: 2rem 0; opacity: 0.2;">
+
+            <h3>12. Account Termination</h3>
+            <p>Bhavesh Rohilla Projects reserves the right to suspend or terminate user access if the service is used in violation of these terms or applicable laws.</p>
+
+            <hr style="border:1px solid var(--border-color); margin: 2rem 0; opacity: 0.2;">
+
+            <h3>13. Changes to This Policy</h3>
+            <p>This Privacy Policy and Terms of Service may be updated periodically to reflect changes in functionality, legal requirements, or operational practices. Updated versions will be published on this page.</p>
+
+            <hr style="border:1px solid var(--border-color); margin: 2rem 0; opacity: 0.2;">
+
+            <h3>14. Data Deletion and User Rights</h3>
+            <p>Users have the right to request deletion of their account-related data.</p>
+            <p>At the current stage of BRUT, data deletion requests are accepted <strong>only via email</strong>, as public self-service deletion tools are not yet available.</p>
+            <p>To request data deletion, users must:</p>
+            <ul>
+                <li>Send an email from their registered email address</li>
+                <li>Clearly state the request for account and data deletion</li>
+            </ul>
+            <p>Upon verification of the request, Bhavesh Rohilla Projects will delete the associated account data within a reasonable timeframe, subject to legal and security requirements.</p>
+            <p>Once Google OAuth verification is completed and additional features are released, data deletion options may also be made available directly through the BRUT website.</p>
+
+            <hr style="border:1px solid var(--border-color); margin: 2rem 0; opacity: 0.2;">
+
+            <h3>15. Contact Information</h3>
+            <p>For questions, concerns, or data-related requests (including data deletion), please contact:</p>
+            <p>
+                <strong>Bhavesh Rohilla Projects</strong><br>
+                Project: <strong>BRUT</strong>
+            </p>
+            <p>
+                Data Deletion Request: <a href="mailto:data.brutsupport@atomicmail.io">data.brutsupport@atomicmail.io</a>
+                <br>
+                Support: <a href="mailto:brutsupport@atomicmail.io">brutsupport@atomicmail.io</a>
+                <br>
+                Bhavesh Rohilla Projects: <a href="mailto:bhaveshrohillaprojects@gmail.com">bhaveshrohillaprojects@gmail.com</a>
+            </p>
+        </div>
+    </main>
+
+</body>
+
+</html>

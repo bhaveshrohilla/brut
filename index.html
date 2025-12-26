@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRUT | Tools</title>
+    <style>
+        /* --- Google Material Style Variables --- */
+        :root {
+            --primary: #4285F4;
+            --success: #34A853;
+            --bg-color: #ffffff;
+            --text-color: #202124;
+            --surface-color: #f1f3f4;
+            --shadow: 0 4px 6px rgba(32, 33, 36, 0.1);
+            --font: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --radius: 12px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #202124;
+                --text-color: #e8eaed;
+                --surface-color: #303134;
+                --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #gateway-container {
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* --- Loading Spinner --- */
+        .spinner-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .circular-loader {
+            animation: rotate 2s linear infinite;
+            height: 50px;
+            width: 50px;
+        }
+
+        .circular-loader circle {
+            stroke: var(--primary);
+            stroke-width: 4;
+            stroke-dasharray: 1, 200;
+            stroke-dashoffset: 0;
+            animation: dash 1.5s ease-in-out infinite;
+            stroke-linecap: round;
+        }
+
+        @keyframes rotate {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes dash {
+            0% {
+                stroke-dasharray: 1, 200;
+                stroke-dashoffset: 0;
+            }
+
+            50% {
+                stroke-dasharray: 89, 200;
+                stroke-dashoffset: -35;
+            }
+
+            100% {
+                stroke-dasharray: 89, 200;
+                stroke-dashoffset: -124;
+            }
+        }
+
+        /* --- Challenge UI --- */
+        .challenge-box {
+            background-color: var(--surface-color);
+            padding: 40px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .icon-lg {
+            width: 64px;
+            height: 64px;
+            fill: var(--text-color);
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            margin: 0 0 10px 0;
+            font-weight: 500;
+            font-size: 1.5rem;
+        }
+
+        p {
+            margin: 0 0 20px 0;
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+
+        .key-display {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary);
+            background: rgba(66, 133, 244, 0.1);
+            width: 80px;
+            height: 80px;
+            line-height: 80px;
+            border-radius: 16px;
+            margin: 0 auto 20px auto;
+            border: 2px solid var(--primary);
+            transition: 0.1s;
+        }
+
+        .key-display.active {
+            transform: scale(0.9);
+            background: var(--primary);
+            color: white;
+        }
+
+        .progress-wrapper {
+            height: 6px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+            width: 100%;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--primary);
+            transition: width 0.1s linear;
+        }
+
+        .toggle-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border-bottom: 1px dashed transparent;
+        }
+
+        .toggle-link:hover {
+            border-bottom-color: var(--primary);
+        }
+
+        .hold-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: 0.1s;
+        }
+
+        .hold-btn:active {
+            transform: scale(0.96);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- Success State --- */
+        .success-anim {
+            color: var(--success);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="gateway-container">
+
+        <div id="loading-state" class="spinner-container">
+            <svg class="circular-loader" viewBox="25 25 50 50">
+                <circle cx="50" cy="50" r="20" fill="none"></circle>
+            </svg>
+            <p>Verifying Environment...</p>
+        </div>
+
+        <div id="key-challenge" class="challenge-box hidden">
+            <svg class="icon-lg" viewBox="0 0 24 24">
+                <path
+                    d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z" />
+            </svg>
+            <h2>Security Check</h2>
+            <p>Press and hold the key below for 3 seconds.</p>
+            <div id="target-key" class="key-display">?</div>
+            <div class="progress-wrapper">
+                <div id="key-progress" class="progress-bar"></div>
+            </div>
+            <a class="toggle-link" onclick="switchMode('mouse')">Use Mouse / Touch instead</a>
+        </div>
+
+        <div id="mouse-challenge" class="challenge-box hidden">
+            <svg class="icon-lg" viewBox="0 0 24 24">
+                <path
+                    d="M13 1.07V9h7c0-4.08-3.05-7.44-7-7.93zM4 15c0 4.42 3.58 8 8 8s8-3.58 8-8v-4H4v4zm7-13.93C7.05 1.56 4 4.92 4 9h7V1.07z" />
+            </svg>
+            <h2>Manual Override</h2>
+            <p>Press and hold the button below.</p>
+            <button id="hold-button" class="hold-btn">HOLD ME</button>
+            <div class="progress-wrapper">
+                <div id="mouse-progress" class="progress-bar"></div>
+            </div>
+            <a class="toggle-link" onclick="switchMode('key')">Use Keyboard instead</a>
+        </div>
+
+        <div id="success-state" class="hidden">
+            <svg class="icon-lg success-anim" viewBox="0 0 24 24"
+                style="fill: var(--success); width: 80px; height: 80px;">
+                <path
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+            </svg>
+            <h2 class="success-anim">Access Granted</h2>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Configuration ---
+        // Default redirect if no parameter is provided
+        let REDIRECT_URL = "main.html";
+
+        const HOLD_DURATION = 3000;
+        const LOADING_TIME = 4000;
+        const TOKEN_KEY = "secure_gateway_session_token";
+        const MAX_SESSION_TIME = 18000000; // 5 hours
+
+        // --- URL Parameter Security Check ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const customRedirect = urlParams.get('redirect');
+
+        if (customRedirect) {
+            try {
+                // 1. Create a URL object based on current origin.
+                // If customRedirect is "help.html", it becomes "https://yoursite.com/help.html"
+                // If customRedirect is "https://virus.com", it becomes "https://virus.com/"
+                const targetUrl = new URL(customRedirect, window.location.origin);
+
+                // 2. Strict Origin Check
+                // We compare the 'origin' of the target vs the 'origin' of the current window.
+                // This blocks: virus.com, sub.yoursite.com (if different), and protocol hacks.
+                if (targetUrl.origin === window.location.origin) {
+
+                    // 3. Prevent 'javascript:' protocol specifically
+                    if (targetUrl.protocol !== 'javascript:') {
+                        console.log("Internal redirect accepted:", customRedirect);
+                        REDIRECT_URL = customRedirect;
+                    } else {
+                        console.warn("Blocked unsafe javascript protocol.");
+                    }
+
+                } else {
+                    console.error("Security Block: External domains are not allowed.");
+                    console.log("Blocked URL:", customRedirect);
+                    // We simply keep REDIRECT_URL as "main.html" if the check fails.
+                }
+            } catch (e) {
+                console.error("Invalid URL format detected.");
+            }
+        }
+
+        // --- Logic Variables ---
+        let isLoading = true;
+        let requiredKey = '';
+        let holdStartTime = 0;
+        let progressInterval = null;
+
+        // --- Elements ---
+        const loadingEl = document.getElementById('loading-state');
+        const keyChallengeEl = document.getElementById('key-challenge');
+        const mouseChallengeEl = document.getElementById('mouse-challenge');
+        const successEl = document.getElementById('success-state');
+        const targetKeyEl = document.getElementById('target-key');
+        const keyProgressEl = document.getElementById('key-progress');
+        const mouseProgressEl = document.getElementById('mouse-progress');
+        const holdButton = document.getElementById('hold-button');
+
+        // --- Token Management System ---
+
+        function setToken() {
+            const now = new Date();
+            const tokenData = {
+                value: "authorized",
+                expiry: now.getTime() + MAX_SESSION_TIME
+            };
+            sessionStorage.setItem(TOKEN_KEY, JSON.stringify(tokenData));
+        }
+
+        function checkToken() {
+            try {
+                const itemStr = sessionStorage.getItem(TOKEN_KEY);
+                if (!itemStr) return false;
+
+                const item = JSON.parse(itemStr);
+                const now = new Date();
+
+                if (now.getTime() > item.expiry) {
+                    sessionStorage.removeItem(TOKEN_KEY);
+                    return false;
+                }
+                return true;
+            } catch (e) {
+                sessionStorage.removeItem(TOKEN_KEY);
+                return false;
+            }
+        }
+
+        function fastRedirect() {
+            setToken();
+            window.location.replace(REDIRECT_URL);
+        }
+
+        // --- Initialization ---
+        function init() {
+            if (checkToken()) {
+                window.location.replace(REDIRECT_URL);
+                return;
+            }
+
+            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                fastRedirect();
+                return;
+            }
+
+            const loadTimer = setTimeout(() => {
+                if (isLoading) triggerChallenge();
+            }, LOADING_TIME);
+
+            const handleMouseMove = () => {
+                if (isLoading) {
+                    isLoading = false;
+                    clearTimeout(loadTimer);
+                    fastRedirect();
+                }
+            };
+
+            document.addEventListener('mousemove', handleMouseMove);
+
+            setTimeout(() => {
+                document.removeEventListener('mousemove', handleMouseMove);
+            }, LOADING_TIME + 100);
+        }
+
+        function triggerChallenge() {
+            isLoading = false;
+            loadingEl.classList.add('hidden');
+
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            requiredKey = chars.charAt(Math.floor(Math.random() * chars.length));
+            targetKeyEl.innerText = requiredKey;
+
+            keyChallengeEl.classList.remove('hidden');
+            setupListeners();
+        }
+
+        function switchMode(mode) {
+            resetProgress();
+            if (mode === 'mouse') {
+                keyChallengeEl.classList.add('hidden');
+                mouseChallengeEl.classList.remove('hidden');
+            } else {
+                mouseChallengeEl.classList.add('hidden');
+                keyChallengeEl.classList.remove('hidden');
+            }
+        }
+
+        function startHolding(progressBarElement) {
+            if (holdStartTime !== 0) return;
+            holdStartTime = Date.now();
+            targetKeyEl.classList.add('active');
+
+            progressInterval = setInterval(() => {
+                const elapsed = Date.now() - holdStartTime;
+                const percentage = Math.min((elapsed / HOLD_DURATION) * 100, 100);
+                progressBarElement.style.width = percentage + "%";
+
+                if (elapsed >= HOLD_DURATION) {
+                    completeManualChallenge();
+                }
+            }, 16);
+        }
+
+        function stopHolding(progressBarElement) {
+            clearInterval(progressInterval);
+            holdStartTime = 0;
+            progressBarElement.style.width = "0%";
+            targetKeyEl.classList.remove('active');
+        }
+
+        function resetProgress() {
+            stopHolding(keyProgressEl);
+            stopHolding(mouseProgressEl);
+        }
+
+        function completeManualChallenge() {
+            clearInterval(progressInterval);
+            setToken();
+            keyChallengeEl.classList.add('hidden');
+            mouseChallengeEl.classList.add('hidden');
+            loadingEl.classList.add('hidden');
+            successEl.classList.remove('hidden');
+
+            setTimeout(() => {
+                window.location.href = REDIRECT_URL;
+            }, 1000);
+        }
+
+        function setupListeners() {
+            document.addEventListener('keydown', (e) => {
+                if (keyChallengeEl.classList.contains('hidden')) return;
+                if (e.key.toUpperCase() === requiredKey) startHolding(keyProgressEl);
+            });
+            document.addEventListener('keyup', (e) => {
+                if (keyChallengeEl.classList.contains('hidden')) return;
+                if (e.key.toUpperCase() === requiredKey) stopHolding(keyProgressEl);
+            });
+            holdButton.addEventListener('mousedown', () => startHolding(mouseProgressEl));
+            holdButton.addEventListener('mouseup', () => stopHolding(mouseProgressEl));
+            holdButton.addEventListener('mouseleave', () => stopHolding(mouseProgressEl));
+            holdButton.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                startHolding(mouseProgressEl);
+            });
+            holdButton.addEventListener('touchend', () => stopHolding(mouseProgressEl));
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

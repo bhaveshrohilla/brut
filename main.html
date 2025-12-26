@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BRUT | Main</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --card-bg: #f4f4f4;
+            --accent-color: #3b82f6;
+            --border-color: #000000;
+            --shadow-offset: 4px;
+            --transition-speed: 0.2s;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #121212;
+                --text-color: #ffffff;
+                --card-bg: #1e1e1e;
+                --border-color: #ffffff;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem 5%;
+            border-bottom: 2px solid var(--border-color);
+            position: relative;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -2px;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        /* NAVIGATION BUTTON STYLES */
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            color: inherit;
+            transition: var(--transition-speed);
+            font-weight: bold;
+        }
+
+        .nav-btn:hover {
+            background: var(--card-bg);
+            transform: scale(1.05);
+        }
+
+        main {
+            padding: 4rem 5%;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+        }
+
+        h2.section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            border-left: 5px solid var(--accent-color);
+            padding-left: 1rem;
+            margin-top: 2rem;
+        }
+
+        /* --- GRID & CARDS --- */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .tool-card {
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-color);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            cursor: pointer;
+            position: relative;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--border-color);
+            transition: all var(--transition-speed) ease;
+            animation: fadeIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        .tool-card:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 8px 8px 0px var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .tool-icon {
+            font-size: 3rem;
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .tool-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        .tool-card-more {
+            background-color: transparent;
+            border: 2px dashed var(--border-color);
+            box-shadow: none;
+        }
+
+        .tool-card-more:hover {
+            background-color: var(--card-bg);
+            border-style: solid;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 4rem;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">BRUT</div>
+        <!-- Static Header: No Login/Profile as per request -->
+    </header>
+
+    <main>
+
+        <h2 class="section-title">BRUT Suite</h2>
+        <div class="tools-grid">
+            <a href="under_dev" class="tool-card">
+                <span class="material-symbols-outlined tool-icon">article</span>
+                <span class="tool-name">Write</span>
+            </a>
+
+            <a href="under_dev" class="tool-card">
+                <span class="material-symbols-outlined tool-icon">grid_on</span>
+                <span class="tool-name">Spreadsheet</span>
+            </a>
+        </div>
+
+        <h2 class="section-title">PDF Tools</h2>
+        <div class="tools-grid">
+
+
+            <a href="pdf/merge" class="tool-card" style="animation-delay: 0.1s;">
+                <span class="material-symbols-outlined tool-icon">call_merge</span>
+                <span class="tool-name">Merge</span>
+            </a>
+
+            <a href="pdf/compress" class="tool-card" style="animation-delay: 0.2s;">
+                <span class="material-symbols-outlined tool-icon">compress</span>
+                <span class="tool-name">Compress</span>
+            </a>
+
+            <a href="pdf/rearrange" class="tool-card" style="animation-delay: 0.3s;">
+                <span class="material-symbols-outlined tool-icon">grid_view</span>
+                <span class="tool-name">Rearrange</span>
+            </a>
+
+            <a href="pdf/" class="tool-card tool-card-more" style="animation-delay: 0.4s;">
+                <span class="material-symbols-outlined tool-icon">apps</span>
+                <span class="tool-name">More PDF Tools</span>
+            </a>
+        </div>
+
+        <h2 class="section-title">Image Tools</h2>
+        <div class="tools-grid">
+            <a href="under_dev" class="tool-card" style="animation-delay: 0.5s;">
+                <span class="material-symbols-outlined tool-icon">photo_size_select_small</span>
+                <span class="tool-name">Crop Image/ Resize</span>
+            </a>
+            <a href="under_dev" class="tool-card" style="animation-delay: 0.6s;">
+                <span class="material-symbols-outlined tool-icon">compress</span>
+                <span class="tool-name">Compress</span>
+            </a>
+            <a href="under_dev" class="tool-card" style="animation-delay: 0.6s;">
+                <span class="material-symbols-outlined tool-icon">data_thresholding</span>
+                <span class="tool-name">EXIF Editor</span>
+            </a>
+
+
+        </div>
+
+    </main>
+
+    <footer>
+        &copy; 2025 BRUT System. All rights reserved.
+        <br><a href="" class="">See My Other Projects</a>
+    </footer>
+
+    <script>
+        // Theme Debugging (Optional)
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            console.log("Dark mode active");
+        }
+
+        // Theme Debugging (Optional)
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            console.log("Dark mode active");
+        }
+    </script>
+</body>
+
+</html>
